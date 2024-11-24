@@ -33,6 +33,20 @@ function groupAndPrioMap(data) {
     return [group, prio];
 }
 
+function p3TransitionPrioMap(data) {
+    const g1 = data.triggerSetConfig.g1p1;
+    const g2 = data.triggerSetConfig.g2p1;
+    const prio = {};
+    let i = 0;
+    for (let name of g1.split(',')) {
+        prio[name.trim()] = i++;
+    }
+    for (let name of g2.split(',').reverse()) {
+        prio[name.trim()] = i++;
+    }
+    return prio;
+}
+
 function p2SynergyPartner(data, player) {
   const myMarker = data.synergyMarker[player];
   for (const [name, marker] of Object.entries(data.synergyMarker)) {
@@ -111,65 +125,68 @@ function p1InLinePartner(data) {
   };
 }
 
-function looperResponse(data, _matches, output) {
-  const mechanicNum = data.loopBlasterCount + 1;
-  if (mechanicNum >= 5)
-    return;
-  const partnerData = p1InLinePartner(data);
-  if (partnerData === undefined)
-    return;
-  const { myNum, swapping, partner } = partnerData;
-  const swapstr = swapping ? output.swap() : output.noswap();
-  if (myNum === undefined)
-    return { infoText: output.unknown() };
-  if (myNum === mechanicNum)
-    return { alertText: output.tower({ num: mechanicNum, swapstr }) };
-  if (mechanicNum === myNum + 2 || mechanicNum === myNum - 2)
-    return { alertText: output.tether({ num: mechanicNum, swapstr }) };
+const looper = {
+  durationSeconds: 8,
+  response: (data, _matches, output) => {
+    const mechanicNum = data.loopBlasterCount + 1;
+    if (mechanicNum >= 5)
+      return;
+    const partnerData = p1InLinePartner(data);
+    if (partnerData === undefined)
+      return;
+    const { myNum, swapping, partner } = partnerData;
+    const swapstr = swapping ? output.swap() : output.noswap();
+    if (myNum === undefined)
+      return { infoText: output.unknown() };
+    if (myNum === mechanicNum)
+      return { alertText: output.tower({ num: mechanicNum, swapstr }) };
+    if (mechanicNum === myNum + 2 || mechanicNum === myNum - 2)
+      return { alertText: output.tether({ num: mechanicNum, swapstr }) };
 
-  let next = null;
-  switch (myNum) {
-    case 1:
-      if (mechanicNum == 2) {
-        next = output.nextTether();
-      } else {
-        return { infoText: output.doneWithMechanic() };
-      }
-      break;
-    case 2:
-      next = mechanicNum == 1 ? output.nextTower() : output.nextTether();
-      break;
-    case 3:
-      if (mechanicNum == 2) {
-        next = output.nextTower();
-      } else {
-        return { infoText: output.doneWithMechanic() };
-      }
-      break;
-    case 4:
-      next = mechanicNum == 1 ? output.nextTether() : output.nextTower();
-      break;
-  }
-  return { infoText: output.numWithNext({ num: mechanicNum, next, swapstr }) };
-}
-const looperOutputStrings = {
-  tower: {
-    en: 'Tower ${num} ${swapstr}',
+    let next = null;
+    switch (myNum) {
+      case 1:
+        if (mechanicNum == 2) {
+          next = output.nextTether();
+        } else {
+          return { infoText: output.doneWithMechanic() };
+        }
+        break;
+      case 2:
+        next = mechanicNum == 1 ? output.nextTower() : output.nextTether();
+        break;
+      case 3:
+        if (mechanicNum == 2) {
+          next = output.nextTower();
+        } else {
+          return { infoText: output.doneWithMechanic() };
+        }
+        break;
+      case 4:
+        next = mechanicNum == 1 ? output.nextTether() : output.nextTower();
+        break;
+    }
+    return { infoText: output.numWithNext({ num: mechanicNum, next, swapstr }) };
   },
-  tether: {
-    en: 'Tether ${num} ${swapstr}',
+  outputStrings: {
+    tower: {
+      en: 'Tower ${num} ${swapstr}',
+    },
+    tether: {
+      en: 'Tether ${num} ${swapstr}',
+    },
+    numWithNext: {
+      en: 'chill for now (next: ${next} ${swapstr})',
+    },
+    doneWithMechanic: {
+      en: 'chill: dont get hit by anything',
+    },
+    unknown: Outputs.unknown,
+    swap: 'and YOU SWAP',
+    noswap: 'noswap',
+    nextTower: 'tower',
+    nextTether: 'tether',
   },
-  numWithNext: {
-    en: 'chill for now (next: ${next} ${swapstr})',
-  },
-  doneWithMechanic: {
-    en: 'chill: dont get hit by anything',
-  },
-  unknown: Outputs.unknown,
-  swap: 'and YOU SWAP',
-  noswap: 'noswap',
-  nextTower: 'tower',
-  nextTether: 'tether',
 };
 
 Options.Triggers.push({
@@ -352,29 +369,113 @@ Options.Triggers.push({
       type: 'StartsUsing',
       // 7B07 = Blaster cast (only one cast, but 4 abilities)
       netRegex: { id: '7B07', source: 'Omega', capture: false },
-      durationSeconds: (data) => {
-        // const myNum = data.inLine[data.me];
-        //if (myNum === 1 || myNum === 3)
-        return 7;
-      },
-      response: looperResponse,
-      outputStrings: looperOutputStrings,
+      ...looper,
     },
     {
       id: 'TOP Program Loop Other Debuffs',
       type: 'Ability',
       netRegex: { id: '7B08', source: 'Omega', capture: false },
       preRun: (data) => data.loopBlasterCount++,
-      durationSeconds: (data) => {
-        // const mechanicNum = data.loopBlasterCount + 1;
-        // const myNum = data.inLine[data.me];
-        // if (myNum === undefined)
-        //   return;
-        //if (mechanicNum === myNum || mechanicNum === myNum + 2 || mechanicNum === myNum - 2)
-        return 7;
+      ...looper,
+    },
+
+    {
+      id: 'TOP Sniper Cannon Fodder',
+      type: 'GainsEffect',
+      netRegex: { effectId: 'D61' },
+      preRun: (data, matches) => data.cannonFodder[matches.target] = 'spread',
+      response: () => {},
+    },
+    {
+      id: 'TOP High-Powered Sniper Cannon Fodder',
+      type: 'GainsEffect',
+      netRegex: { effectId: 'D62', capture: false },
+      delaySeconds: 0.5,
+      durationSeconds: 15,
+      suppressSeconds: 1,
+      response: (data, _matches, output) => {
+        const spreaders = [];
+        const jumpers = [];
+        const stackers = [];
+
+        for (const name of data.party?.partyNames ?? []) {
+          switch (data.cannonFodder[name]) {
+            case 'spread':
+              spreaders.push(name);
+              break;
+            case 'stack':
+              stackers.push(name);
+              break;
+            default:
+              jumpers.push(name);
+              break;
+          }
+        }
+        const prio = p3TransitionPrioMap(data);
+
+        const prioSort = (a, b) => prio[data.party.member(a).nick] - prio[data.party.member(b).nick];
+        spreaders.sort(prioSort);
+        stackers.sort(prioSort);
+        jumpers.sort(prioSort);
+
+        let i = 0;
+        for (const name of spreaders) {
+          i++;
+          if (name !== data.me)
+            continue;
+
+          let dir = output.unknown();
+          switch (i) {
+            case 1: dir = output.left(); break;
+            case 2: dir = output.topLeft(); break;
+            case 3: dir = output.topRight(); break;
+            case 4: dir = output.right(); break;
+          }
+          return { alertText: output.spread({ dir }) };
+        }
+
+        i = 0;
+        for (const name of stackers) {
+          i++;
+          if (name !== data.me)
+            continue;
+
+          let dir = output.unknown();
+          switch (i) {
+            case 1: dir = output.backLeft(); break;
+            case 2: dir = output.backRight(); break;
+          }
+          return { alertText: output.stacker({ dir }) };
+        }
+
+        i = 0;
+        for (const name of jumpers) {
+          i++;
+          if (name !== data.me)
+            continue;
+
+          let dir = output.unknown();
+          switch (i) {
+            case 1: dir = output.backLeft(); break;
+            case 2: dir = output.backRight(); break;
+          }
+          return { alertText: output.jump({ dir }) };
+        }
+
+        return { alertText: output.unknown() };
       },
-      response: looperResponse,
-      outputStrings: looperOutputStrings,
+      outputStrings: {
+        spread: 'FORWARD then ${dir}',
+        stacker: 'BACKWARD then ${dir}',
+        jump: 'JUMP then go ${dir}',
+        left: 'LEFT',
+        right: 'RIGHT',
+        topLeft: 'TOP LEFT',
+        topRight: 'TOP RIGHT',
+        backLeft: 'BACK LEFT',
+        backRight: 'BACK RIGHT',
+        unknown: Outputs.unknown,
+      },
     },
   ],
 });
