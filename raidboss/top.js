@@ -13,6 +13,7 @@ const headmarkers = {
   // vfx/lockon/eff/all_at8s_0v.avfx
   meteor: '015A',
 };
+
 function groupAndPrioMap(data) {
     let g1key = `g1${data.phase}`;
     let g2key = `g2${data.phase}`;
@@ -189,6 +190,16 @@ const looper = {
   },
 };
 
+function monitorPrio(data) {
+    const config = data.triggerSetConfig.monitorPrio;
+    const prio = {};
+    let i = 0;
+    for (let name of config.split(',')) {
+        prio[name.trim()] = i++;
+    }
+    return prio;
+}
+
 Options.Triggers.push({
   id: 'tinys-top-triggers',
   zoneId: ZoneId.TheOmegaProtocolUltimate,
@@ -208,6 +219,14 @@ Options.Triggers.push({
       },
       type: 'string',
       default: 'Karasu,Ruu,Shino,Vaults',
+    },
+    {
+      id: 'monitorPrio',
+      name: {
+        en: 'Monitor Prio (top-to-bottom)',
+      },
+      type: 'string',
+      default: 'Tiny,Andy,Caspian,Scloral,Vaults,Ruu,Karasu,Shino',
     },
   ],
 
@@ -469,6 +488,45 @@ Options.Triggers.push({
         backLeft: 'BACK LEFT',
         backRight: 'BACK RIGHT',
         unknown: Outputs.unknown,
+      },
+    },
+    {
+      id: 'TOP Oversampled Wave Cannon Loading',
+      type: 'GainsEffect',
+      // D7C = Oversampled Wave Cannon Loading (facing right)
+      // D7D = Oversampled Wave Cannon Loading (facing left)
+      netRegex: { effectId: ['D7C', 'D7D'] },
+      preRun: (data, matches) => data.monitorPlayers.push(matches),
+      response: (data, _matches, output) => {
+        if (data.monitorPlayers.length !== 3)
+          return;
+        const monitors = data.monitorPlayers.map((x) => x.target);
+        const notMonitors = [];
+        for (const name of data.party?.partyNames ?? []) {
+          if (!monitors.includes(name))
+            notMonitors.push(name);
+        }
+
+        const prio = monitorPrio(data);
+        const prioSort = (a, b) => prio[data.party.member(a).nick] - prio[data.party.member(b).nick];
+        monitors.sort(prioSort);
+        notMonitors.sort(prioSort);
+
+        const monitorIndex = monitors.indexOf(data.me);
+        const notMonitorIndex = notMonitors.indexOf(data.me);
+        data.monitorPlayers = [];
+        if (monitorIndex !== -1) {
+          return { alertText: output.monitorNumber({ n: monitorIndex + 1 }) }
+        }
+        return { infoText: output.unmarkedNumber({ n: notMonitorIndex + 1 }) }
+      },
+      outputStrings: {
+        monitorNumber: {
+          en: 'Monitor #${n}',
+        },
+        unmarkedNumber: {
+          en: 'Unmarked #${n}',
+        },
       },
     },
   ],
