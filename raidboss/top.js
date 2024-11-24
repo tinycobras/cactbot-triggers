@@ -273,25 +273,18 @@ Options.Triggers.push({
       },
     },
 
-    // FINISHED 
     {
       id: 'TOP Spotlight',
       type: 'HeadMarker',
       netRegex: {},
       condition: (data, matches) => getHeadmarkerId(data, matches) === headmarkers.stack,
       durationSeconds: 14,
-      infoText: (data, matches, output) => {
+      response: (data, matches, output) => {
         // accumulate the stacks
         data.spotlightStacks.push(matches.target);
         let [p1, p2] = data.spotlightStacks.sort();
         if (data.spotlightStacks.length !== 2 || p1 === undefined || p2 === undefined)
           return;
-
-        // console.log("RAW p1", p1);
-        // console.log("RAW p2", p2);
-        // console.log("RAW data.me", data.me);
-        // console.log("RAW data.spotlightStacks", JSON.stringify(data.spotlightStacks));
-        // console.log("RAW data.synergyMarker", JSON.stringify(data.synergyMarker));
 
         const isFar = data.glitch === 'remote';
         const [groups, prio] = groupAndPrioMap(data);
@@ -303,7 +296,6 @@ Options.Triggers.push({
 
         // if a swap is happening, and p1 is further S, then swap p1/p2
         if (p1Data.side == p2Data.side && p1Data.pos > p2Data.pos) {
-          // console.log('p1 is below p2, swapping internally');
           [p1Data, p2Data] = [p2Data, p1Data];
           [p1, p2] = [p2, p1];
         }
@@ -313,14 +305,10 @@ Options.Triggers.push({
         let swap1 = null;
         let swap2 = null;
         if (p1Data.side == p2Data.side) {
-          // console.log('swap detected', p1.name, JSON.stringify(p1Data));
-          // console.log('             ', p2.name, JSON.stringify(p2Data));
           swap1 = p1.name;
           swap2 = p2SynergyPartner(data, p1.name);
           let otherSwapper = data.party.member(swap2);
           swapstr = output.swap({ p1, p2: otherSwapper });
-        } else {
-          // console.log('noswap');
         }
 
         let group0Dir = output.left();
@@ -328,31 +316,34 @@ Options.Triggers.push({
         let dir;
         if (myData.side == 0) {
           if (data.me === swap1 || data.me === swap2) {
-            // console.log('ima left side swapper');
             dir = group1Dir;
           } else {
-            // console.log('ima left side');
             dir = group0Dir;
           }
         } else {
           if (data.me === swap1 || data.me === swap2) {
-            // console.log('ima right side swapper');
             dir = group0Dir;
           } else {
-            // console.log('ima right side');
             dir = group1Dir;
           }
         }
 
         let glitch = isFar ? output.far() : output.near();
-        // console.log('FINAL MESSAGE', dir, swapstr, glitch);
-        let ret = output.text({ dir, swapstr, glitch });
-        // console.log(ret);
-        return ret;
+        if ((swap1 && swap1 == data.me) || (swap2 && swap2 == data.me)) {
+          return { 
+            alertText: output.swapText({ dir, swapstr, glitch }),
+          };
+        }
+        return { 
+          infoText: output.text({ dir, swapstr, glitch }),
+        };
       },
       outputStrings: {
         text: {
           en: 'GO ${dir} & ${glitch} (${swapstr})',
+        },
+        swapText: {
+          en: 'SWAP & ${dir} & ${glitch} (${swapstr})',
         },
         near: 'NEAR',
         far: 'FAR',
@@ -379,6 +370,7 @@ Options.Triggers.push({
       ...looper,
     },
 
+    // override this one to do nothing
     {
       id: 'TOP Sniper Cannon Fodder',
       type: 'GainsEffect',
@@ -386,6 +378,8 @@ Options.Triggers.push({
       preRun: (data, matches) => data.cannonFodder[matches.target] = 'spread',
       response: () => {},
     },
+
+    // override this one to do all the callouts for this mechanic
     {
       id: 'TOP High-Powered Sniper Cannon Fodder',
       type: 'GainsEffect',
