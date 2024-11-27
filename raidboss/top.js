@@ -226,7 +226,7 @@ Options.Triggers.push({
         en: 'Monitor Prio (top-to-bottom)',
       },
       type: 'string',
-      default: 'Tiny,Andy,Caspian,Scloral,Vaults,Ruu,Karasu,Shino',
+      default: 'Caspian,Andy,Tiny,Scloral,Vaults,Ruu,Karasu,Shino',
     },
   ],
 
