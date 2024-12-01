@@ -228,6 +228,22 @@ Options.Triggers.push({
       type: 'string',
       default: 'Caspian,Andy,Tiny,Scloral,Vaults,Ruu,Karasu,Shino',
     },
+    {
+      id: 'g1p4',
+      name: {
+        en: 'Group 1 in p4 (first never swaps)',
+      },
+      type: 'string',
+      default: 'Scloral,Andy,Tiny,Caspian',
+    },
+    {
+      id: 'g2p4',
+      name: {
+        en: 'Group 2 in p4 (first never swaps)',
+      },
+      type: 'string',
+      default: 'Vaults,Ruu,Karasu,Shino',
+    },
   ],
 
   triggers: [
@@ -526,6 +542,71 @@ Options.Triggers.push({
         },
         unmarkedNumber: {
           en: 'Unmarked #${n}',
+        },
+      },
+    },
+    {
+      id: 'TOP Wave Cannon Stack',
+      type: 'Ability',
+      netRegex: { id: '5779', source: 'Omega', capture: false },
+      delaySeconds: 0.3,
+      suppressSeconds: 1,
+      response: (data, _matches, output) => {
+        const [m1, m2] = data.waveCannonStacks;
+        if (data.waveCannonStacks.length !== 2 || m1 === undefined || m2 === undefined)
+          return;
+        const [groups, prio] = groupAndPrioMap(data);
+        let p1 = data.party.member(m1.target);
+        let p2 = data.party.member(m2.target);
+        const me = data.party.member(data.me);
+
+        // make it so `p2` is the swapper
+        if (prio[p1.nick] > prio[p2.nick]) {
+          [p1, p2] = [p2, p1];
+        }
+
+        // If there is no swap, say so, and if I'm not the one swapping,
+        // also say so.
+        if (groups[p1.nick] !== groups[p2.nick] || p1.nick == me.nick) {
+          return {
+            infoText: output.noSwap({
+              player1: p1,
+              player2: p2,
+            }),
+          };
+        }
+
+        // If I'm the swapper (p2 == m2) or if I'm the melee on the side of 
+        // the other side from the marked players then I'm swapping.
+        const markedToSwap = me.nick === p2.nick;
+        const meleeSwapper = prio[me.nick] == 3 && groups[me.nick] !== groups[p2.nick];
+        if (markedToSwap || meleeSwapper) {
+          return {
+            alarmText: output.youSwap({
+              player1: p1,
+              player2: p2,
+            }),
+          };
+        }
+
+        // And finally indicate that someone's swapping but it's not us.
+        return {
+          infoText: output.othersSwap({
+            player1: p1,
+            player2: p2,
+          }),
+        };
+      },
+      run: (data, _matches) => data.waveCannonStacks = [],
+      outputStrings: {
+        noSwap: {
+          en: 'No swap (stacks on ${player1}, ${player2})',
+        },
+        othersSwap: {
+          en: 'stacks on ${player1}, ${player2} (you noswap)',
+        },
+        youSwap: {
+          en: 'SWAP SIDES (stacks on ${player1}, ${player2})',
         },
       },
     },
