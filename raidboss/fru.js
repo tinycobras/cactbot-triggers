@@ -219,7 +219,7 @@ Options.Triggers.push({
         en: 'Fall of Faith Conga',
       },
       type: 'string',
-      default: 'Andy,Tiny,Vaults,Scloral,Shino,Caspian,Karasu,Ruu',
+      default: 'Andy,Tiny,Vaults,Shino,Scloral,Caspian,Karasu,Ruu',
     }, 
     {
       id: 'support',
