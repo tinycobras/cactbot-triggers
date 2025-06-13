@@ -422,12 +422,6 @@ Options.Triggers.push({
       response: (data, matches, output) => {
         // cactbot-builtin-response
         output.responseOutputStrings = {
-          aaccSilence: {
-            en: '(stay in front)',
-            de: '(steh vorne)',
-            cn: '(待在正面)',
-            ko: '(보스 앞 그대로)',
-          },
           silence: Outputs.front,
           stillness: Outputs.back,
         };
