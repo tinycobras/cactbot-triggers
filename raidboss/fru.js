@@ -245,51 +245,33 @@ Options.Triggers.push({
       durationSeconds: (data) => data.p1FallOfFaithTethers.length >= 3 ? 12.2 : 3,
       response: (data, matches, output) => {
         output.responseOutputStrings = {
-          fire: { en: 'Fire', },
-          lightning: { en: 'Lightning', },
+        //   fire: { en: 'Fire', },
+        //   lightning: { en: 'Lightning', },
           left: { en: 'LEFT', },
           right: { en: 'RIGHT', },
-          one: { en: '1', },
-          two: { en: '2', },
-          three: { en: '3', },
-          onYou: { en: 'On YOU', },
-          side: { en: 'side', },
+        //   one: { en: '1', },
+        //   two: { en: '2', },
+        //   three: { en: '3', },
+        //   onYou: { en: 'On YOU', },
+          side: { en: 'middle', },
           hitbox: { en: 'hitbox', },
-          above: { en: 'above', },
-          below: { en: 'below', },
-          tetherYou: { en: '${dir} ${num}: ${elem} (${target})', },
-          tetherOther: { en: '${num}: ${elem} (${target})', },
-          all: {
-            // en: '${e1} => ${e2} => ${e3} => ${e4}',
-            en: '${side}: ${spot1} then ${spot2} (${t1} then ${t2})',
-          },
+          above: { en: 'top', },
+          below: { en: 'bottom', },
+          tetherYou: { en: '${dir} tether ${num}', },
+          all: { en: '${side}: ${spot1} -> ${spot2}', },
         };
         const curTether = matches.id === '00F9' ? 'fire' : 'lightning';
         data.p1FallOfFaithTethers.push([curTether, matches.target]);
         if (data.p1FallOfFaithTethers.length < 4) {
-          const num = data.p1FallOfFaithTethers.length === 1
-            ? 'one'
-            : (data.p1FallOfFaithTethers.length === 2 ? 'two' : 'three');
+          const num = data.p1FallOfFaithTethers.length;
           const dir = data.p1FallOfFaithTethers.length === 1
             ? output.left()
             : (data.p1FallOfFaithTethers.length === 2 ? output.right() : output.left());
           if (data.me === matches.target)
             return {
-              alertText: output.tetherYou({
-                num: output[num](),
-                elem: output[curTether](),
-                target: output.onYou(),
-                dir,
-              }),
+              alertText: output.tetherYou({ dir, num }),
             };
-          return {
-            infoText: output.tetherOther({
-              num: output[num](),
-              elem: output[curTether](),
-              target: data.party.member(matches.target),
-              dir,
-            }),
-          };
+          return {};
         }
         const prio = faithPrio(data);
         const prioSort = (a, b) => prio[data.party.member(a).nick] - prio[data.party.member(b).nick];
@@ -338,15 +320,15 @@ Options.Triggers.push({
                     spot1 = e1 == 'lightning' ? output.below() : output.side();
                     spot2 = e3 == 'lightning' ? output.below() : output.side();
                     break;
-                case 3:
-                    side = output.right();
-                    spot1 = e2 == 'lightning' ? output.above() : output.side();
-                    spot2 = e4 == 'lightning' ? output.above() : output.side();
-                    break;
                 case 2:
                     side = output.right();
                     spot1 = e2 == 'lightning' ? output.below() : output.side();
                     spot2 = e4 == 'lightning' ? output.below() : output.side();
+                    break;
+                case 3:
+                    side = output.right();
+                    spot1 = e2 == 'lightning' ? output.above() : output.side();
+                    spot2 = e4 == 'lightning' ? output.above() : output.side();
                     break;
                 default: 
                     return;
@@ -362,15 +344,15 @@ Options.Triggers.push({
         const ret = {};
         const key = p4 == data.me ? 'alertText' : 'infoText';
         ret[key] = output.all({
-            e1: output[e1](),
-            e2: output[e2](),
-            e3: output[e3](),
-            e4: output[e4](),
+            // e1: output[e1](),
+            // e2: output[e2](),
+            // e3: output[e3](),
+            // e4: output[e4](),
             side,
             spot1,
             spot2,
-            t1: output[t1](),
-            t2: output[t2](),
+            // t1: output[t1](),
+            // t2: output[t2](),
         });
         return ret;
       },
@@ -387,61 +369,46 @@ Options.Triggers.push({
         let mech = data.p2FrigidStoneTargets.includes(data.me) ? 'dropPuddle' : 'baitCleave';
         const firstIcicle = data.p2IcicleImpactStart[0] ?? 'unknown';
         if (firstIcicle === 'unknown')
-          return output.combo({ inOut: inOut, dir: output.unknown(), mech: output[mech]() });
+          return 'god help you';
         // Assumes that if first Icicle Impacts spawn on cardinals, House of Light baits will also be
         // cardinals and Frigid Stone puddle drops will be intercards, and vice versa.
         const dir = mech === 'baitCleave'
-          ? (isCardinalDir(firstIcicle) ? output.cardinals() : output.intercards())
-          : (isCardinalDir(firstIcicle) ? output.intercards() : output.cardinals());
+          ? (isCardinalDir(firstIcicle) ? 'cardinals' : 'intercards')
+          : (isCardinalDir(firstIcicle) ? 'intercards' : 'cardinals');
         const supports = support(data);
         let key;
         if (supports.indexOf(data.party.member(data.me).nick) !== -1) {
-            if (dir == output.cardinals())
+            if (dir == 'cardinals')
                 key = 'comboNoSwap';
             else 
                 key = 'comboSwap';
         } else {
-            if (dir == output.cardinals())
+            if (dir == 'cardinals')
                 key = 'comboSwap';
             else 
                 key = 'comboNoSwap';
         }
-        const where = data.p2AxeScytheSafe;
-        if (mech === 'baitCleave' && where == 'out') {
-            mech = 'baitAndOut';
-        } else if (mech === 'baitCleave' && where == 'in') {
-            mech = 'baitAndIn';
-        } else if (mech === 'dropPuddle' && where == 'out') {
-            mech = 'dropAndOut';
-        } else if (mech === 'dropPuddle' && where == 'in') {
-            mech = 'dropAndIn';
-        }
-        return output[key]({ inOut: inOut, dir: dir, mech: output[mech]() });
+        // const where = data.p2AxeScytheSafe;
+        // if (mech === 'baitCleave' && where == 'out') {
+        //     mech = 'baitAndOut';
+        // } else if (mech === 'baitCleave' && where == 'in') {
+        //     mech = 'baitAndIn';
+        // } else if (mech === 'dropPuddle' && where == 'out') {
+        //     mech = 'dropAndOut';
+        // } else if (mech === 'dropPuddle' && where == 'in') {
+        //     mech = 'dropAndIn';
+        // }
+        return output[key]({ inOut });
       },
       outputStrings: {
-        combo: {
-          en: '(??unknown swap??) ${inOut} + ${dir} => ${mech}',
-        },
         comboNoSwap: {
-          en: '${inOut} => ${mech}',
+          en: 'STAY & ${inOut}',
         },
         comboSwap: {
-          en: 'SWAP & ${inOut} => ${mech}',
+          en: 'SWAP & ${inOut}',
         },
-        dropPuddle: {
-          en: 'Drop Puddle',
-        },
-        baitCleave: {
-          en: 'Bait',
-        },
-        baitAndOut: { en: 'on circle & sprint in' },
-        baitAndIn: { en: 'very in and stay' },
-        dropAndOut: { en: 'edge of arena, move on drop' },
-        dropAndIn: { en: 'wait then sprint out to circle' },
         in: Outputs.in,
         out: Outputs.out,
-        cardinals: Outputs.cardinals,
-        intercards: Outputs.intercards,
         unknown: Outputs.unknown,
       },
     },
