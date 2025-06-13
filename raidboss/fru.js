@@ -338,12 +338,12 @@ Options.Triggers.push({
                     spot1 = e1 == 'lightning' ? output.below() : output.side();
                     spot2 = e3 == 'lightning' ? output.below() : output.side();
                     break;
-                case 2:
+                case 3:
                     side = output.right();
                     spot1 = e2 == 'lightning' ? output.above() : output.side();
                     spot2 = e4 == 'lightning' ? output.above() : output.side();
                     break;
-                case 3:
+                case 2:
                     side = output.right();
                     spot1 = e2 == 'lightning' ? output.below() : output.side();
                     spot2 = e4 == 'lightning' ? output.below() : output.side();
