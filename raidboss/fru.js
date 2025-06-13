@@ -412,5 +412,33 @@ Options.Triggers.push({
         unknown: Outputs.unknown,
       },
     },
+    {
+      id: 'FRU P2 Twin Silence/Stillness First',
+      type: 'StartsUsing',
+      // 9D01 - Twin Stillness (back safe -> front safe)
+      // 9D02 - Twin Silence (front safe -> back safe)
+      netRegex: { id: ['9D01', '9D02'] },
+      durationSeconds: 2.8,
+      response: (data, matches, output) => {
+        // cactbot-builtin-response
+        output.responseOutputStrings = {
+          aaccSilence: {
+            en: '(stay in front)',
+            de: '(steh vorne)',
+            cn: '(待在正面)',
+            ko: '(보스 앞 그대로)',
+          },
+          silence: Outputs.front,
+          stillness: Outputs.back,
+        };
+        if (data.triggerSetConfig.sinboundRotate === 'aacc')
+          return matches.id === '9D01'
+            ? { alertText: output.stillness() }
+            : {};
+        return matches.id === '9D01'
+          ? { alertText: output.stillness() }
+          : { alertText: output.silence() };
+      },
+    },
   ],
 });
