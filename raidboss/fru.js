@@ -1,199 +1,70 @@
 const isCardinalDir = (dir) => {
   return Directions.outputCardinalDir.includes(dir);
 };
+const centerX = 100;
+const centerY = 100;
+
+const p3UROutputStrings = {
+  yNorthStrat: {
+    en: '${debuff} (${dir})',
+    de: '${debuff} (${dir})',
+    cn: '${debuff} (${dir})',
+    ko: '${debuff} (${dir})',
+  },
+  dirCombo: {
+    en: '${inOut} + ${dir}',
+    de: '${inOut} + ${dir}',
+    cn: '${inOut} + ${dir}',
+    ko: '${inOut} + ${dir}',
+  },
+  fireSpread: {
+    en: 'Fire - Spread',
+    de: 'Feuer - verteilen',
+    cn: '火分散',
+    ko: '불 - 산개',
+  },
+  dropRewind: {
+    en: 'Drop Rewind',
+    de: 'Lege Rückführung ab',
+    cn: '放置回返',
+    ko: '리턴 설치',
+  },
+  baitStoplight: {
+    en: 'Bait Stoplight',
+    de: 'Köder Sanduhr',
+    cn: '引导激光',
+    ko: '모래시계 유도',
+  },
+  avoidStoplights: {
+    en: 'Avoid stoplights',
+    de: 'Vermeide Sanduhren',
+    cn: '远离激光',
+    ko: '모래시계 피하기',
+  },
+  stack: Outputs.stackMarker,
+  middle: Outputs.middle,
+  out: Outputs.out,
+};
 
 
-// const headmarkers = {
-//   // vfx/lockon/eff/lockon5_t0h.avfx
-//   spread: '0017',
-//   // vfx/lockon/eff/tank_lockonae_5m_5s_01k1.avfx
-//   buster: '0157',
-//   // vfx/lockon/eff/z3oz_firechain_01c.avfx through 04c
-//   firechainCircle: '01A0',
-//   firechainTriangle: '01A1',
-//   firechainSquare: '01A2',
-//   firechainX: '01A3',
-//   // vfx/lockon/eff/com_share2i.avfx
-//   stack: '0064',
-//   // vfx/lockon/eff/all_at8s_0v.avfx
-//   meteor: '015A',
-// };
-
-// function groupAndPrioMap(data) {
-//     let g1key = `g1${data.phase}`;
-//     let g2key = `g2${data.phase}`;
-//     const g1 = data.triggerSetConfig[g1key] || data.triggerSetConfig.g1p1;
-//     const g2 = data.triggerSetConfig[g2key] || data.triggerSetConfig.g2p1;
-//     const group = {};
-//     const prio = {};
-//     let i = 0;
-//     for (let name of g1.split(',')) {
-//         group[name.trim()] = 0;
-//         prio[name.trim()] = i++;
-//     }
-//     i = 0;
-//     for (let name of g2.split(',')) {
-//         group[name.trim()] = 1;
-//         prio[name.trim()] = i++;
-//     }
-//     return [group, prio];
-// }
-
-// function p3TransitionPrioMap(data) {
-//     const g1 = data.triggerSetConfig.g1p1;
-//     const g2 = data.triggerSetConfig.g2p1;
-//     const prio = {};
-//     let i = 0;
-//     for (let name of g1.split(',')) {
-//         prio[name.trim()] = i++;
-//     }
-//     for (let name of g2.split(',').reverse()) {
-//         prio[name.trim()] = i++;
-//     }
-//     return prio;
-// }
-
-// function p2SynergyPartner(data, player) {
-//   const myMarker = data.synergyMarker[player];
-//   for (const [name, marker] of Object.entries(data.synergyMarker)) {
-//     if (marker === myMarker && name !== player) {
-//       return name;
-//     }
-//   }
-//   return null;
-// }
-// const firstMarker = parseInt('0017', 16);
-
-
-// const getHeadmarkerId = (data, matches) => {
-//   if (data.decOffset === undefined)
-//     data.decOffset = parseInt(matches.id, 16) - firstMarker;
-//   // The leading zeroes are stripped when converting back to string, so we re-add them here.
-//   // Fortunately, we don't have to worry about whether or not this is robust,
-//   // since we know all the IDs that will be present in the encounter.
-//   return (parseInt(matches.id, 16) - data.decOffset).toString(16).toUpperCase().padStart(4, '0');
-// };
-
-// function p2PlaystationMap(data, player) {
-//   const isFar = data.glitch === 'remote';
-//   const myMarker = data.synergyMarker[player];
-//   let myPos = {
-//     circle: 2,
-//     triangle: 3,
-//     square: 1,
-//     cross: 0,
-//   }[myMarker];
-//   let partner = p2SynergyPartner(data, player);
-//   const meNick = data.party.member(player).nick;
-//   const partnerNick = data.party.member(partner).nick;
-//   const [groups, prio] = groupAndPrioMap(data);
-//   let myGroup = groups[meNick];
-//   let partnerGroup = groups[partnerNick];
-//   if (myGroup == partnerGroup && prio[meNick] > prio[partnerNick]) {
-//     myGroup = 1 - myGroup;
-//   }
-
-//   if (isFar && myGroup == 1) {
-//     if (myPos === 0) {
-//       myPos = 3;
-//     } else if (myPos === 3) {
-//       myPos = 0;
-//     }
-//   }
-//   return {
-//     marker: myMarker,
-//     side: myGroup,
-//     pos: myPos,
-//     partner,
-//   };
-// }
-
-// function p1InLinePartner(data) {
-//   const myNum = data.inLine[data.me];
-//   if (myNum === undefined)
-//     return;
-//   let partner = null;
-//   for (const [name, num] of Object.entries(data.inLine)) {
-//     if (num === myNum && name !== data.me) {
-//       partner = name;
-//       break;
-//     }
-//   }
-//   const meNick = data.party.member(data.me).nick;
-//   const partnerNick = data.party.member(partner).nick;
-//   const [groups, prio] = groupAndPrioMap(data);
-//   let swapping = groups[meNick] == groups[partnerNick] && prio[meNick] > prio[partnerNick];
-
-//   return {
-//     myNum,
-//     swapping,
-//     partner,
-//   };
-// }
-
-// const looper = {
-//   durationSeconds: 8,
-//   response: (data, _matches, output) => {
-//     const mechanicNum = data.loopBlasterCount + 1;
-//     if (mechanicNum >= 5)
-//       return;
-//     const partnerData = p1InLinePartner(data);
-//     if (partnerData === undefined)
-//       return;
-//     const { myNum, swapping, partner } = partnerData;
-//     const swapstr = swapping ? output.swap() : output.noswap();
-//     if (myNum === undefined)
-//       return { infoText: output.unknown() };
-//     if (myNum === mechanicNum)
-//       return { alertText: output.tower({ num: mechanicNum, swapstr }) };
-//     if (mechanicNum === myNum + 2 || mechanicNum === myNum - 2)
-//       return { alertText: output.tether({ num: mechanicNum, swapstr }) };
-
-//     let next = null;
-//     switch (myNum) {
-//       case 1:
-//         if (mechanicNum == 2) {
-//           next = output.nextTether();
-//         } else {
-//           return { infoText: output.doneWithMechanic() };
-//         }
-//         break;
-//       case 2:
-//         next = mechanicNum == 1 ? output.nextTower() : output.nextTether();
-//         break;
-//       case 3:
-//         if (mechanicNum == 2) {
-//           next = output.nextTower();
-//         } else {
-//           return { infoText: output.doneWithMechanic() };
-//         }
-//         break;
-//       case 4:
-//         next = mechanicNum == 1 ? output.nextTether() : output.nextTower();
-//         break;
-//     }
-//     return { infoText: output.numWithNext({ num: mechanicNum, next, swapstr }) };
-//   },
-//   outputStrings: {
-//     tower: {
-//       en: 'Tower ${num} ${swapstr}',
-//     },
-//     tether: {
-//       en: 'Tether ${num} ${swapstr}',
-//     },
-//     numWithNext: {
-//       en: 'chill for now (next: ${next} ${swapstr})',
-//     },
-//     doneWithMechanic: {
-//       en: 'chill: dont get hit by anything',
-//     },
-//     unknown: Outputs.unknown,
-//     swap: 'and YOU SWAP',
-//     noswap: 'noswap',
-//     nextTower: 'tower',
-//     nextTether: 'tether',
-//   },
-// };
+// Helper for Ultimate Relativity that finds relative North based on the yellow-tethered lights
+// It takes an array of dir nums (e.g. 0-8), finds the two dir nums that have a single gap
+// between them (e.g. 1 and 3) -- the apex of the "Y" -- and returns the dir num of the gap.
+const findURNorthDirNum = (dirs) => {
+  for (let i = 0; i < dirs.length; i++) {
+    for (let j = i + 1; j < dirs.length; j++) {
+      const [dir1, dir2] = [dirs[i], dirs[j]];
+      if (dir1 === undefined || dir2 === undefined)
+        return -1;
+      const diff = Math.abs(dir1 - dir2);
+      if (diff === 2)
+        return Math.min(dir1, dir2) + 1;
+      else if (diff === 6) // wrap around
+        return (Math.max(dir1, dir2) + 1) % 8;
+    }
+  }
+  return -1;
+};
 
 function faithPrio(data) {
     const config = data.triggerSetConfig.p1faith;
@@ -432,6 +303,156 @@ Options.Triggers.push({
         return matches.id === '9D01'
           ? { alertText: output.stillness() }
           : { alertText: output.silence() };
+      },
+    },
+    {
+      id: 'FRU P3 Ultimate Relativity Y North Spot',
+      type: 'Tether',
+      // boss tethers to 5 stoplights - 0085 are purple tethers, 0086 are yellow
+      netRegex: { id: '0086' },
+      condition: (data) => data.phase === 'p3-ur',
+      run: (data, matches, output) => {
+        const id = matches.sourceId;
+        const stoplight = data.p3RelativityStoplights[id];
+        if (stoplight === undefined)
+          return;
+        const x = parseFloat(stoplight.x);
+        const y = parseFloat(stoplight.y);
+        data.p3RelativityYellowDirNums.push(Directions.xyTo8DirNum(x, y, centerX, centerY));
+        if (data.p3RelativityYellowDirNums.length !== 3)
+          return;
+        const northDirNum = findURNorthDirNum(data.p3RelativityYellowDirNums);
+        if (northDirNum === -1 || data.p3RelativityDebuff === undefined) {
+          data.p3RelativityMyDirStr = output.unknown();
+          return;
+        }
+        const role = data.role === 'dps' ? 'dps' : 'support';
+        const debuff = data.p3RelativityDebuff;
+        // const output8Dir = ['A', '2', 'B', '3', 'C', '4', 'D', '1'];
+        const output8Dir = Directions.output8Dir;
+        if (role === 'dps') {
+          if (debuff === 'longFire' || debuff === 'ice') {
+            const myDirNum = (northDirNum + 4) % 8; // relative South
+            data.p3RelativityMyDirStr = output[output8Dir[myDirNum] ?? 'unknown']();
+          } else if (debuff === 'mediumFire') {
+            const myDirNum = (northDirNum + 2) % 8; // relative East
+            data.p3RelativityMyDirStr = output[output8Dir[myDirNum] ?? 'unknown']();
+          } else if (debuff === 'shortFire') {
+            const dirs = [
+              output8Dir[(northDirNum + 3) % 8] ?? 'unknown',
+              output8Dir[(northDirNum + 5) % 8] ?? 'unknown',
+            ];
+            data.p3RelativityMyDirStr = dirs.map((dir) => output[dir]()).join(output.or());
+          }
+        } else { // supports
+          if (debuff === 'shortFire' || debuff === 'ice') {
+            const myDirNum = northDirNum; // relative North
+            data.p3RelativityMyDirStr = output[output8Dir[myDirNum] ?? 'unknown']();
+          } else if (debuff === 'mediumFire') {
+            const myDirNum = (northDirNum + 6) % 8; // relative West
+            data.p3RelativityMyDirStr = output[output8Dir[myDirNum] ?? 'unknown']();
+          } else if (debuff === 'longFire') {
+            const dirs = [
+              output8Dir[(northDirNum + 1) % 8] ?? 'unknown',
+              output8Dir[(northDirNum + 7) % 8] ?? 'unknown',
+            ];
+            data.p3RelativityMyDirStr = dirs.map((dir) => output[dir]()).join(output.or());
+          }
+        }
+        //console.log(data.p3RelativityMyDirStr, data.me)
+      },
+      outputStrings: {
+        dirN: 'A',
+        dirNE: '2',
+        dirE: 'B',
+        dirSE: '3',
+        dirW: 'C',
+        dirSW: '4',
+        dirS: 'S',
+        dirNW: '1',
+        //...Directions.outputStrings8Dir,
+        or: Outputs.or,
+        unknown: Outputs.unknown,
+      },
+    },
+    {
+      // Displays during Spirit Taker
+      id: 'FRU P3 Apoc Safe',
+      type: 'CombatantMemory',
+      netRegex: { change: 'Add', pair: [{ key: 'BNpcID', value: '1EB0FF' }], capture: false },
+      condition: (data) => data.phase === 'p3-apoc',
+      delaySeconds: 9.2,
+      durationSeconds: 11,
+      suppressSeconds: 1,
+      infoText: (data, _matches, output) => {
+        const startNum = data.p3ApocFirstDirNum;
+        const rotationDir = data.p3ApocRotationDir;
+        if (startNum === undefined || rotationDir === undefined)
+          return;
+        // Safe spot(s) are 1 behind the starting dir and it's opposite (+4)
+        // Melees lean one additional dir away from the rotation direction
+        const safe = [
+          (startNum - rotationDir + 8) % 8,
+          (startNum + 4 - rotationDir + 8) % 8,
+        ];
+        const toward = [
+          (safe[0] - rotationDir + 8) % 8,
+          (safe[1] - rotationDir + 8) % 8,
+        ];
+        // We shouldn't just sort safe[], and toward[], since the elements are paired
+        // and sorting might impact order of just one and not both.
+        if (safe[0] > safe[1]) {
+          safe.reverse();
+          toward.reverse();
+        }
+        let safeStr = output['unknown']();
+        let towardStr = output['unknown']();
+        if (data.triggerSetConfig.apoc === 'dpsNE-CW') {
+          const dpsDirs = [1, 2, 3, 4];
+          const suppDirs = [5, 6, 7, 0];
+          const myDirs = data.role === 'dps' ? dpsDirs : suppDirs;
+          // use the index from safe, so we can make sure we're giving the correct 'toward'.
+          const idx = safe.findIndex((idx) => myDirs.includes(idx));
+          if (idx === -1)
+            return output.safe({ dir1: safeStr, dir2: towardStr });
+          const safeDir = safe[idx];
+          const towardDir = toward[idx];
+          if (safeDir === undefined || towardDir === undefined)
+            return output.safe({ dir1: safeStr, dir2: towardStr });
+          safeStr = output[Directions.output8Dir[safeDir] ?? 'unknown']();
+          //console.log(player.me, jsafeDir, towardDir);
+          let towardRel;
+          if (safeDir == 0 && towardDir == 7) {
+            towardRel = output.right();
+          } else if (safeDir == 7 && towardDir == 0) {
+            towardRel = output.left();
+          } else if (safeDir < towardDir) {
+            towardRel = output.left();
+          } else {
+            towardRel = output.right();
+          }
+          towardStr = `${towardRel} to ${output[Directions.output8Dir[towardDir] ?? 'unknown']()}`;
+          return output.safe({ dir1: safeStr, dir2: towardStr });
+        }
+        safeStr = safe
+          .map((dir) => output[Directions.output8Dir[dir] ?? 'unknown']())
+          .join(output.or());
+        towardStr = toward
+          .map((dir) => output[Directions.output8Dir[dir] ?? 'unknown']())
+          .join(output.or());
+        return output.safe({ dir1: safeStr, dir2: towardStr });
+      },
+      outputStrings: {
+        safe: {
+          en: 'Safe: ${dir1} (lean ${dir2})',
+          de: 'Sicher: ${dir1} (halte dich ${dir2})',
+          cn: '${dir1} 偏 ${dir2} 安全',
+          ko: '안전: ${dir1} (${dir2} 쪽으로 한칸)',
+        },
+        right: { en: 'RIGHT' },
+        left: { en: 'LEFT' },
+        ...Directions.outputStrings8Dir,
+        or: Outputs.or,
       },
     },
   ],
