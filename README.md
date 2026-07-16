@@ -19,3 +19,7 @@ To install with `git` clone this repository and set the user directory to the re
 
 1. Copy [this file](https://raw.githubusercontent.com/tinycobras/cactbot-triggers/refs/heads/main/raidboss/top.js)
    and overwrite `top.js` in the previous download/unzip location.
+
+## Development
+
+Go to https://overlayplugin.github.io/cactbot/ui/raidboss/raidemulator.html?OVERLAY_WS=ws://127.0.0.1:10501/ws
