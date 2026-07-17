@@ -300,8 +300,8 @@ Options.Triggers.push({
         return data.me === matches.target && data.pathOfLightCounter === 1;
       },
       delaySeconds: 0.1,
-      durationSeconds: 9,
-      infoText: forsakenOdd,
+      durationSeconds: 11,
+      alertText: forsakenOdd,
       outputStrings: forsakenOutputStrings,
     },
     {
@@ -319,15 +319,36 @@ Options.Triggers.push({
       delaySeconds: 0.1,
       durationSeconds: 9,
       suppressSeconds: 1,
-      infoText: forsakenEven,
+      alertText: forsakenEven,
       outputStrings: forsakenOutputStrings,
     },
+    {
+      id: 'DMU P2 Future\'s End/Past\'s End (Early)',
+      // There are four end casts
+      // This output will need to be short as in 1.4s another trigger will fire
+      type: 'StartsUsing',
+      netRegex: { id: ['BAD2', 'BAD3'], source: 'Kefka', capture: true },
+      infoText: (data, matches, output) => {
+        if (data.pathOfLightCounter >= 8)
+          return output.pastForced();
+        return matches.id === 'BAD2' ? output.future() : output.past();
+      },
+      outputStrings: {
+        future: { en: 'Future' },
+        past: { en: 'Past' },
+        pastForced: { en: 'Between (forced)' },
+      },
+    },
+
     {
       id: 'DMU P2 All Things Ending Baits',
       type: 'Ability',
       netRegex: { id: ['BAD2', 'BAD3'], source: 'Kefka', capture: true },
       delaySeconds: 1.7,
+      durationSeconds: 5,
       alertText: function(data, matches, output) {
+        if (data.pathOfLightCounter >= 8)
+          return output.pastForced();
         const isFuture = matches.id === 'BAD2';
         const bait = isFuture ? output.future() : output.past();
         const then = forsakenOdd(data, matches, output);
@@ -336,6 +357,7 @@ Options.Triggers.push({
       outputStrings: {
         future: { en: 'Bait opposite towers', },
         past: { en: 'Bait between towers', },
+        pastForced: { en: 'Bait between last towers' },
         baitThen: { en: '${bait} => ${then}' },
         ...forsakenOutputStrings
       },
@@ -346,6 +368,7 @@ Options.Triggers.push({
       netRegex: { id: ['BADC', 'BADD'], source: 'Kefka', capture: false },
       condition: (data) => data.pathOfLightCounter === 3,
       suppressSeconds: 1,
+      durationSeconds: 6,
       alertText: forsakenOdd,
       outputStrings: forsakenOutputStrings,
     },
@@ -364,7 +387,7 @@ Options.Triggers.push({
       delaySeconds: 0.1,
       durationSeconds: 9,
       suppressSeconds: 1,
-      infoText: forsakenEven,
+      alertText: forsakenEven,
       outputStrings: forsakenOutputStrings,
     },
     {
@@ -373,6 +396,7 @@ Options.Triggers.push({
       netRegex: { id: ['BADC', 'BADD'], source: 'Kefka', capture: false },
       condition: (data) => data.pathOfLightCounter === 5,
       suppressSeconds: 1,
+      durationSeconds: 6,
       alertText: forsakenOdd,
       outputStrings: forsakenOutputStrings,
     },
@@ -391,7 +415,7 @@ Options.Triggers.push({
       delaySeconds: 0.1,
       durationSeconds: 9,
       suppressSeconds: 1,
-      infoText: forsakenEven,
+      alertText: forsakenEven,
       outputStrings: forsakenOutputStrings,
     },
     {
@@ -400,27 +424,34 @@ Options.Triggers.push({
       netRegex: { id: ['BADC', 'BADD'], source: 'Kefka', capture: false },
       condition: (data) => data.pathOfLightCounter === 7,
       suppressSeconds: 1,
+      durationSeconds: 6,
       alertText: forsakenOdd,
       outputStrings: forsakenOutputStrings,
     },
     {
       id: 'DMU P2 Path of Light Towers 8',
-      type: 'HeadMarker',
+      // Shouldn't be new headmarkers from previous towers
+      // This set should not contain stack markers
+      // Expecting 2 Cones and 2 Spreads soak towers
+      // However AAAABBBB will have 4 Stacks soak towers
+      //
+      // Track based on tower soak or fail
+      // BABF The River of Light
+      // BAC0 Spelldriver
+      // BAC1 Spellscatter
+      // BAC2 Spellwave
+      type: 'Ability',
       netRegex: {
-        id: [
-          headMarkerData['stackPath'],
-          headMarkerData['conePath'],
-          headMarkerData['spreadPath'],
-        ],
+        id: ['BABF', 'BAC0', 'BAC1', 'BAC2'],
+        source: 'Kefka',
         capture: false,
       },
       condition: (data) => data.pathOfLightCounter === 8,
       delaySeconds: 0.1,
       durationSeconds: 9,
       suppressSeconds: 9999,
-      infoText: forsakenEven,
+      alertText: forsakenEven,
       outputStrings: forsakenOutputStrings,
     },
-
   ],
 });
