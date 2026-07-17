@@ -72,19 +72,20 @@ function forsakenOdd(data, _matches, output) {
     // const marker = forsakenHeadmarkerIdToName[matches.id];
     const marker = data.forsakenPlayerHeadmarkers[data.me];
     const myRoleIsDPS = data.party.isDPS(data.me);
+    const num = data.pathOfLightCounter;
 
-    if (data.pathOfLightCounter === 7 && !data.isTinysForsakenGroupA)
-        console.log(data.me, marker)
+    // if (data.pathOfLightCounter === 7 && !data.isTinysForsakenGroupA)
+    //     console.log(data.me, marker)
 
     const inTower = isInTower(data);
     if (!inTower) {
         const tower = myRoleIsDPS ? output.rightTower() : output.leftTower();
-        return output.oddOut({ tower })
+        return output.oddOut({ num, tower })
     }
     if (marker === 'cone') 
-        return output.oddTowerCone({ tower: output.leftTower() })
+        return output.oddTowerCone({ num, tower: output.leftTower() })
     if (marker === 'spread') 
-        return output.oddTowerSpread({ tower: output.rightTower() })
+        return output.oddTowerSpread({ num, tower: output.rightTower() })
 
     const stack1 = data.pathOfLightStackPlayers[0] ?? 'unknown';
     const stack2 = data.pathOfLightStackPlayers[1] ?? 'unknown';
@@ -96,7 +97,7 @@ function forsakenOdd(data, _matches, output) {
     let tower = defaultTower;
     if (isMelee && stack1IsDPS == stack2IsDPS)
         tower = oppositeTower;
-    return output.oddTowerStack({ tower });
+    return output.oddTowerStack({ num, tower });
 }
 
 function forsakenEven(data, _matches, output) {
@@ -104,11 +105,12 @@ function forsakenEven(data, _matches, output) {
     const marker = data.forsakenPlayerHeadmarkers[data.me];
     const myRoleIsDPS = data.party.isDPS(data.me);
     const inTower = isInTower(data);
+    const num = data.pathOfLightCounter;
     if (!inTower) {
         const side = myRoleIsDPS ? output.evenDpsSide() : output.evenSupportSide();
         if (isMelee)
-            return output.evenMeleeOut({ side });
-        return output.evenRangedOut({ side });
+            return output.evenMeleeOut({ num, side });
+        return output.evenRangedOut({ num, side });
     }
     const partner = forsakenPartner(data, data.me);
     const partnerMarker = data.forsakenPlayerHeadmarkers[partner];
@@ -120,24 +122,24 @@ function forsakenEven(data, _matches, output) {
         tower = oppositeTower;
 
     if (marker == 'cone') 
-        return output.evenTowerCone({ tower });
-    return output.evenTowerSpread({ tower });
+        return output.evenTowerCone({ num, tower });
+    return output.evenTowerSpread({ num, tower });
 }
 
 const forsakenOutputStrings = {
   leftTower: { en: 'Left Tower' },
   rightTower: { en: 'Right Tower' },
-  oddOut: { en: 'Odd out ${tower}' },
-  oddTowerCone: { en: 'Odd: Cone ${tower}' },
-  oddTowerSpread: { en: 'Odd: Spread ${tower}' },
-  oddTowerStack: { en: 'Odd: Stack ${tower}' },
+  oddOut: { en: 'Odd/${num} out ${tower}' },
+  oddTowerCone: { en: 'Odd/${num} Cone ${tower}' },
+  oddTowerSpread: { en: 'Odd/${num} Spread ${tower}' },
+  oddTowerStack: { en: 'Odd/${num} Stack ${tower}' },
 
   evenDpsSide: { en: 'Right' },
   evenSupportSide: { en: 'Left' },
-  evenMeleeOut: { en: 'Even: Out ${side}' },
-  evenRangedOut: { en: 'Even: Out ${side}' },
-  evenTowerCone: { en: 'Even: Tower Cone ${tower}' },
-  evenTowerSpread: { en: 'Even: Tower Spread ${tower}' },
+  evenMeleeOut: { en: 'Even/${num} Out ${side}' },
+  evenRangedOut: { en: 'Even/${num} Out ${side}' },
+  evenTowerCone: { en: 'Even/${num} Tower Cone ${tower}' },
+  evenTowerSpread: { en: 'Even/${num} Tower Spread ${tower}' },
 };
 
 
@@ -239,11 +241,11 @@ Options.Triggers.push({
       },
       outputStrings: {
         init_north: { en: 'North' },
-        init_south: { en: 'South' },
         init_east: { en: 'East' },
+        init_south: { en: 'South' },
         init_west: { en: 'West' },
-        init_northeast: { en: 'Northeast' },
         init_northwest: { en: 'Northwest' },
+        init_northeast: { en: 'Northeast' },
         init_southeast: { en: 'Southeast' },
         init_southwest: { en: 'Southwest' },
         init_dirESE: { en: 'ESE' },
